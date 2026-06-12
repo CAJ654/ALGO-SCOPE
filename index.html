@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALGO·SCOPE — Algorithm Visualizer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --bg: #14161B;
+      --panel: #1B1E25;
+      --panel2: #20242D;
+      --line: #2C313C;
+      --ink: #D7DCE5;
+      --muted: #8A91A0;
+      --dim: #5A6170;
+      --trace: #5CCFE6;
+      --hot: #FFB454;
+      --swap: #F07178;
+      --ok: #87D96C;
+      --pivot: #C792EA;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .as-root {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      padding: 20px 16px 48px;
+    }
+
+    .as-shell {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .as-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .as-title {
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+
+    .as-title .dot {
+      color: var(--hot);
+    }
+
+    .as-sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 6px 0 0;
+      max-width: 54ch;
+      line-height: 1.5;
+    }
+
+    .as-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 22px 0 14px;
+      flex-wrap: wrap;
+    }
+
+    .as-tab {
+      flex: 1;
+      min-width: 104px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--muted);
+      transition: border-color 0.15s, color 0.15s;
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    .as-tab:hover {
+      border-color: var(--dim);
+    }
+
+    .as-tab:focus-visible {
+      outline: 2px solid var(--trace);
+      outline-offset: 2px;
+    }
+
+    .as-tab .ch {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      display: block;
+      color: var(--dim);
+    }
+
+    .as-tab .nm {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+    }
+
+    .as-tab.active {
+      border-color: var(--hot);
+      color: var(--ink);
+    }
+
+    .as-tab.active .ch {
+      color: var(--hot);
+    }
+
+    .as-scope {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .as-screen {
+      position: relative;
+      padding: 18px 16px 14px;
+      background-image: linear-gradient(rgba(92, 207, 230, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(92, 207, 230, 0.05) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .as-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(120% 90% at 50% 0%, transparent 60%, rgba(0, 0, 0, 0.28));
+    }
+
+    .as-readout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      background: var(--panel2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .as-cell {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 14px;
+      border-right: 1px solid var(--line);
+    }
+
+    .as-cell:last-child {
+      border-right: none;
+    }
+
+    .as-cell .k {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    .as-cell .v {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .v.run {
+      color: var(--hot);
+    }
+
+    .v.done {
+      color: var(--ok);
+    }
+
+    .v.idle {
+      color: var(--muted);
+    }
+
+    .as-deck {
+      margin-top: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .as-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .as-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 7px 12px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: inherit;
+    }
+
+    .chip:hover {
+      border-color: var(--dim);
+      color: var(--ink);
+    }
+
+    .chip:focus-visible {
+      outline: 2px solid var(--trace);
+      outline-offset: 2px;
+    }
+
+    .chip.on {
+      border-color: var(--trace);
+      color: var(--trace);
+      background: rgba(92, 207, 230, 0.08);
+    }
+
+    .as-transport {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tbtn {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .tbtn:hover {
+      border-color: var(--dim);
+    }
+
+    .tbtn:focus-visible {
+      outline: 2px solid var(--trace);
+      outline-offset: 2px;
+    }
+
+    .tbtn.primary {
+      background: var(--hot);
+      border-color: var(--hot);
+      color: #1a1206;
+    }
+
+    .tbtn.primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .tbtn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .as-slider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .as-slider label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .as-slider input {
+      flex: 1;
+      accent-color: var(--hot);
+      min-width: 90px;
+    }
+
+    .as-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 2px 2px 0;
+    }
+
+    .lg {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sw {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 260px;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      background: var(--trace);
+      transition: height 0.08s linear;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bar {
+        transition: none;
+      }
+    }
+
+    .pgrid {
+      display: grid;
+      gap: 2px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .pc {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      background: rgba(92, 207, 230, 0.06);
+      border: 1px solid rgba(92, 207, 230, 0.06);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .pc.wall {
+      background: #3a3f4b;
+      border-color: #3a3f4b;
+    }
+
+    .pc.visited {
+      background: rgba(92, 207, 230, 0.32);
+      border-color: transparent;
+    }
+
+    .pc.frontier {
+      background: rgba(255, 180, 84, 0.55);
+      border-color: transparent;
+    }
+
+    .pc.path {
+      background: var(--ok);
+      border-color: var(--ok);
+    }
+
+    .pc.start {
+      background: var(--hot);
+      border-color: var(--hot);
+    }
+
+    .pc.end {
+      background: var(--swap);
+      border-color: var(--swap);
+    }
+
+    .scells {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .sc {
+      width: 46px;
+      height: 52px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sc .ix {
+      font-size: 8px;
+      color: var(--dim);
+    }
+
+    .sc .vl {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .sc.cut {
+      opacity: 0.22;
+    }
+
+    .sc.mid {
+      border-color: var(--hot);
+      background: rgba(255, 180, 84, 0.14);
+    }
+
+    .sc.mid .vl {
+      color: var(--hot);
+    }
+
+    .sc.found {
+      border-color: var(--ok);
+      background: rgba(135, 217, 108, 0.16);
+    }
+
+    .sc.found .vl {
+      color: var(--ok);
+    }
+
+    .sc.bound {
+      border-color: var(--trace);
+    }
+
+    .srow {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .srow b {
+      color: var(--hot);
+      font-size: 16px;
+    }
+
+    .as-note {
+      font-size: 12px;
+      color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+  <script>
+    const { useState, useRef, useEffect, useCallback } = React;
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+
+    function usePlayer() {
+      const genRef = useRef(null);
+      const timerRef = useRef(null);
+      const onFrameRef = useRef(() => {});
+      const onDoneRef = useRef(() => {});
+      const delayRef = useRef(60);
+      const [playing, setPlaying] = useState(false);
+
+      const stepOnce = useCallback(() => {
+        if (!genRef.current) return false;
+        const r = genRef.current.next();
+        if (r.done) {
+          genRef.current = null;
+          onDoneRef.current();
+          return false;
+        }
+        onFrameRef.current(r.value);
+        if (r.value && r.value.done) {
+          genRef.current = null;
+          onDoneRef.current();
+          return false;
+        }
+        return true;
+      }, []);
+
+      const pause = useCallback(() => {
+        clearTimeout(timerRef.current);
+        setPlaying(false);
+      }, []);
+
+      const play = useCallback(() => {
+        if (!genRef.current) return;
+        setPlaying(true);
+        const tick = () => {
+          timerRef.current = setTimeout(() => {
+            if (stepOnce()) tick();
+            else setPlaying(false);
+          }, delayRef.current);
+        };
+        tick();
+      }, [stepOnce]);
+
+      const load = useCallback((gen) => {
+        clearTimeout(timerRef.current);
+        setPlaying(false);
+        genRef.current = gen;
+      }, []);
+
+      const hasGen = useCallback(() => !!genRef.current, []);
+      useEffect(() => () => clearTimeout(timerRef.current), []);
+
+      return { playing, play, pause, stepOnce, load, hasGen, onFrameRef, onDoneRef, delayRef };
+    }
+
+    // Sorting generators
+    function* bubbleGen(input) {
+      const a = [...input], n = a.length, sorted = new Set();
+      let comparisons = 0, swaps = 0;
+      for (let i = 0; i < n - 1; i++) {
+        let moved = false;
+        for (let j = 0; j < n - i - 1; j++) {
+          comparisons++;
+          yield { a: [...a], compare: [j, j + 1], sorted: new Set(sorted), comparisons, swaps };
+          if (a[j] > a[j + 1]) {
+            [a[j], a[j + 1]] = [a[j + 1], a[j]];
+            swaps++;
+            moved = true;
+            yield { a: [...a], swap: [j, j + 1], sorted: new Set(sorted), comparisons, swaps };
+          }
+        }
+        sorted.add(n - 1 - i);
+        if (!moved) break;
+      }
+      for (let k = 0; k < n; k++) sorted.add(k);
+      yield { a: [...a], sorted, comparisons, swaps, done: true };
+    }
+
+    function* selectionGen(input) {
+      const a = [...input], n = a.length, sorted = new Set();
+      let comparisons = 0, swaps = 0;
+      for (let i = 0; i < n - 1; i++) {
+        let min = i;
+        for (let j = i + 1; j < n; j++) {
+          comparisons++;
+          yield { a: [...a], compare: [min, j], sorted: new Set(sorted), comparisons, swaps };
+          if (a[j] < a[min]) min = j;
+        }
+        if (min !== i) {
+          [a[i], a[min]] = [a[min], a[i]];
+          swaps++;
+          yield { a: [...a], swap: [i, min], sorted: new Set(sorted), comparisons, swaps };
+        }
+        sorted.add(i);
+      }
+      for (let k = 0; k < n; k++) sorted.add(k);
+      yield { a: [...a], sorted, comparisons, swaps, done: true };
+    }
+
+    function* insertionGen(input) {
+      const a = [...input], n = a.length;
+      let comparisons = 0, swaps = 0;
+      for (let i = 1; i < n; i++) {
+        let j = i;
+        while (j > 0) {
+          comparisons++;
+          yield { a: [...a], compare: [j - 1, j], comparisons, swaps };
+          if (a[j - 1] > a[j]) {
+            [a[j - 1], a[j]] = [a[j], a[j - 1]];
+            swaps++;
+            j--;
+            yield { a: [...a], swap: [j, j + 1], comparisons, swaps };
+          } else break;
+        }
+      }
+      const sorted = new Set(a.map((_, k) => k));
+      yield { a: [...a], sorted, comparisons, swaps, done: true };
+    }
+
+    function* mergeGen(input) {
+      const a = [...input];
+      const stats = { comparisons: 0, swaps: 0 };
+      function* ms(lo, hi) {
+        if (hi - lo < 1) return;
+        const mid = (lo + hi) >> 1;
+        yield* ms(lo, mid);
+        yield* ms(mid + 1, hi);
+        const merged = [];
+        let i = lo, j = mid + 1;
+        while (i <= mid && j <= hi) {
+          stats.comparisons++;
+          yield {
+            a: [...a],
+            compare: [i, j],
+            comparisons: stats.comparisons,
+            swaps: stats.swaps,
+          };
+          if (a[i] <= a[j]) merged.push(a[i++]);
+          else merged.push(a[j++]);
+        }
+        while (i <= mid) merged.push(a[i++]);
+        while (j <= hi) merged.push(a[j++]);
+        for (let k = 0; k < merged.length; k++) {
+          a[lo + k] = merged[k];
+          stats.swaps++;
+          yield { a: [...a], swap: [lo + k, lo + k], comparisons: stats.comparisons, swaps: stats.swaps };
+        }
+      }
+      yield* ms(0, a.length - 1);
+      const sorted = new Set(a.map((_, k) => k));
+      yield { a: [...a], sorted, comparisons: stats.comparisons, swaps: stats.swaps, done: true };
+    }
+
+    function* quickGen(input) {
+      const a = [...input];
+      const stats = { comparisons: 0, swaps: 0 };
+      const sorted = new Set();
+      function* qs(lo, hi) {
+        if (lo > hi) return;
+        if (lo === hi) { sorted.add(lo); return; }
+        const pivot = a[hi];
+        let i = lo - 1;
+        for (let j = lo; j < hi; j++) {
+          stats.comparisons++;
+          yield {
+            a: [...a],
+            compare: [j, hi],
+            pivot: hi,
+            sorted: new Set(sorted),
+            comparisons: stats.comparisons,
+            swaps: stats.swaps,
+          };
+          if (a[j] < pivot) {
+            i++;
+            if (i !== j) {
+              [a[i], a[j]] = [a[j], a[i]];
+              stats.swaps++;
+              yield {
+                a: [...a],
+                swap: [i, j],
+                pivot: hi,
+                sorted: new Set(sorted),
+                comparisons: stats.comparisons,
+                swaps: stats.swaps,
+              };
+            }
+          }
+        }
+        [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+        stats.swaps++;
+        sorted.add(i + 1);
+        yield { a: [...a], swap: [i + 1, hi], sorted: new Set(sorted), comparisons: stats.comparisons, swaps: stats.swaps };
+        yield* qs(lo, i);
+        yield* qs(i + 2, hi);
+      }
+      yield* qs(0, a.length - 1);
+      for (let k = 0; k < a.length; k++) sorted.add(k);
+      yield { a: [...a], sorted, comparisons: stats.comparisons, swaps: stats.swaps, done: true };
+    }
+
+    const SORT_ALGOS = {
+      bubble: { name: 'Bubble', gen: bubbleGen, big: 'O(n²)' },
+      selection: { name: 'Selection', gen: selectionGen, big: 'O(n²)' },
+      insertion: { name: 'Insertion', gen: insertionGen, big: 'O(n²)' },
+      merge: { name: 'Merge', gen: mergeGen, big: 'O(n log n)' },
+      quick: { name: 'Quick', gen: quickGen, big: 'O(n log n) avg' },
+    };
+
+    // Pathfinding
+    const ROWS = 13, COLS = 25;
+    const START = [6, 3], END = [6, 21];
+    const key = (r, c) => `${r},${c}`;
+    const neighbors = (r, c) =>
+      [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+        .filter(([nr, nc]) => nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS);
+
+    function reconstruct(prev, endK) {
+      const path = [];
+      let cur = endK;
+      while (cur && prev.has(cur)) { path.push(cur); cur = prev.get(cur); }
+      path.push(key(...START));
+      return new Set(path);
+    }
+
+    function* searchGridGen(mode, walls) {
+      const startK = key(...START), endK = key(...END);
+      const visited = new Set();
+      const prev = new Map();
+      let expanded = 0;
+      const h = (k) => {
+        const [r, c] = k.split(',').map(Number);
+        return Math.abs(r - END[0]) + Math.abs(c - END[1]);
+      };
+      let frontier = [{ k: startK, g: 0 }];
+      const inFrontier = new Set([startK]);
+
+      while (frontier.length) {
+        let node;
+        if (mode === 'bfs') node = frontier.shift();
+        else if (mode === 'dfs') node = frontier.pop();
+        else {
+          frontier.sort((x, y) => {
+            const fx = mode === 'astar' ? x.g + h(x.k) : h(x.k);
+            const fy = mode === 'astar' ? y.g + h(y.k) : h(y.k);
+            return fx - fy;
+          });
+          node = frontier.shift();
+        }
+        inFrontier.delete(node.k);
+        if (visited.has(node.k)) continue;
+        visited.add(node.k);
+        expanded++;
+
+        if (node.k === endK) {
+          const path = reconstruct(prev, endK);
+          yield { visited: new Set(visited), frontier: new Set(inFrontier), path, expanded, pathLen: path.size, done: true };
+          return;
+        }
+        const [r, c] = node.k.split(',').map(Number);
+        for (const [nr, nc] of neighbors(r, c)) {
+          const nk = key(nr, nc);
+          if (walls.has(nk) || visited.has(nk)) continue;
+          if (!prev.has(nk) && nk !== startK) prev.set(nk, node.k);
+          if (!inFrontier.has(nk)) {
+            frontier.push({ k: nk, g: node.g + 1 });
+            inFrontier.add(nk);
+          }
+        }
+        yield { visited: new Set(visited), frontier: new Set(inFrontier), path: null, expanded, pathLen: 0 };
+      }
+      yield { visited: new Set(visited), frontier: new Set(), path: null, expanded, pathLen: 0, noPath: true, done: true };
+    }
+
+    const PATH_ALGOS = {
+      bfs: { name: 'BFS', big: 'O(V + E)', note: 'Explores in rings — first arrival is the shortest path.' },
+      dfs: { name: 'DFS', big: 'O(V + E)', note: 'Dives deep down one branch — finds a path, rarely the shortest.' },
+      greedy: { name: 'Greedy BF', big: 'O(E log V)', note: 'Chases the heuristic only — fast, but walls can fool it.' },
+      astar: { name: 'A*', big: 'O(E log V)', note: 'Cost so far + heuristic — shortest path, fewer cells expanded.' },
+    };
+
+    // Searching
+    function* linearSearchGen(values, target) {
+      let comparisons = 0;
+      for (let i = 0; i < values.length; i++) {
+        comparisons++;
+        yield { checking: i, comparisons };
+        if (values[i] === target) {
+          yield { checking: i, found: i, comparisons, done: true };
+          return;
+        }
+      }
+      yield { comparisons, found: -1, done: true };
+    }
+
+    function* binarySearchGen(values, target) {
+      let lo = 0, hi = values.length - 1, comparisons = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        comparisons++;
+        yield { lo, hi, mid, comparisons };
+        if (values[mid] === target) {
+          yield { lo, hi, mid, found: mid, comparisons, done: true };
+          return;
+        }
+        if (values[mid] < target) lo = mid + 1;
+        else hi = mid - 1;
+      }
+      yield { lo, hi, comparisons, found: -1, done: true };
+    }
+
+    // UI Components
+    function Readout({ items }) {
+      return (
+        React.createElement('div', { className: 'as-readout' },
+          items.map((it) =>
+            React.createElement('div', { className: 'as-cell', key: it.k },
+              React.createElement('div', { className: 'k' }, it.k),
+              React.createElement('div', { className: `v ${it.cls || ''}` }, it.v)
+            )
+          )
+        )
+      );
+    }
+
+    function Transport({ playing, onPlayPause, onStep, onReset, resetLabel = 'Reset', disabled }) {
+      return React.createElement('div', { className: 'as-transport' },
+        React.createElement('button', { className: 'tbtn primary', onClick: onPlayPause, disabled }, playing ? 'Pause' : 'Play'),
+        React.createElement('button', { className: 'tbtn', onClick: onStep, disabled: disabled || playing }, 'Step'),
+        React.createElement('button', { className: 'tbtn', onClick: onReset }, resetLabel)
+      );
+    }
+
+    function SpeedSlider({ value, onChange }) {
+      return React.createElement('div', { className: 'as-slider' },
+        React.createElement('label', null, 'Speed'),
+        React.createElement('input', { type: 'range', min: 1, max: 100, value, onChange: (e) => onChange(Number(e.target.value)), 'aria-label': 'Animation speed' })
+      );
+    }
+
+    const randArray = (n) =>
+      Array.from({ length: n }, () => 8 + Math.floor(Math.random() * 92));
+
+    // Sort Channel
+    function SortChannel() {
+      const [algo, setAlgo] = useState('quick');
+      const [size, setSize] = useState(40);
+      const [speed, setSpeed] = useState(70);
+      const [arr, setArr] = useState(() => randArray(40));
+      const [frame, setFrame] = useState(null);
+      const [status, setStatus] = useState('idle');
+      const player = usePlayer();
+
+      player.delayRef.current = Math.max(8, 210 - speed * 2);
+      player.onFrameRef.current = (f) => { setFrame(f); if (f.done) setStatus('done'); };
+      player.onDoneRef.current = () => setStatus((s) => (s === 'running' ? 'done' : s));
+
+      const reset = useCallback((n = size) => {
+        player.load(null);
+        setArr(randArray(n));
+        setFrame(null);
+        setStatus('idle');
+      }, [player, size]);
+
+      const ensure = () => {
+        if (!player.hasGen() && status !== 'done') {
+          player.load(SORT_ALGOS[algo].gen(arr));
+        }
+        return status !== 'done';
+      };
+
+      const onPlayPause = () => {
+        if (player.playing) { player.pause(); setStatus('paused'); return; }
+        if (!ensure()) return;
+        setStatus('running');
+        player.play();
+      };
+      const onStep = () => {
+        if (!ensure()) return;
+        setStatus('paused');
+        player.stepOnce();
+      };
+      const pickAlgo = (k) => { setAlgo(k); player.load(null); setFrame(null); setStatus('idle'); };
+      const changeSize = (n) => { setSize(n); reset(n); };
+
+      const view = frame ? frame.a : arr;
+      const max = Math.max(...view);
+      const colorOf = (i) => {
+        if (frame?.sorted?.has(i)) return 'var(--ok)';
+        if (frame?.swap && (frame.swap[0] === i || frame.swap[1] === i)) return 'var(--swap)';
+        if (frame?.pivot === i) return 'var(--pivot)';
+        if (frame?.compare && (frame.compare[0] === i || frame.compare[1] === i)) return 'var(--hot)';
+        return 'var(--trace)';
+      };
+
+      return React.createElement(React.Fragment, null,
+        React.createElement('div', { className: 'as-scope' },
+          React.createElement('div', { className: 'as-screen' },
+            React.createElement('div', { className: 'bars' },
+              view.map((v, i) =>
+                React.createElement('div', { key: i, className: 'bar', style: { height: `${(v / max) * 100}%`, background: colorOf(i) } })
+              )
+            )
+          ),
+          React.createElement(Readout, { items: [
+            { k: 'Status', v: status.toUpperCase(), cls: status === 'running' ? 'run' : status === 'done' ? 'done' : 'idle' },
+            { k: 'Comparisons', v: frame?.comparisons ?? 0 },
+            { k: 'Swaps / Writes', v: frame?.swaps ?? 0 },
+            { k: 'Avg Time', v: SORT_ALGOS[algo].big },
+          ] })
+        ),
+        React.createElement('div', { className: 'as-deck' },
+          React.createElement('div', { className: 'as-chips' },
+            Object.entries(SORT_ALGOS).map(([k, v]) =>
+              React.createElement('button', { key: k, className: `chip ${algo === k ? 'on' : ''}`, onClick: () => pickAlgo(k) }, v.name)
+            )
+          ),
+          React.createElement('div', { className: 'as-row' },
+            React.createElement(Transport, { playing: player.playing, onPlayPause, onStep, onReset: () => reset(), resetLabel: 'Shuffle', disabled: status === 'done' }),
+            React.createElement(SpeedSlider, { value: speed, onChange: setSpeed }),
+            React.createElement('div', { className: 'as-slider' },
+              React.createElement('label', null, `Bars · ${size}`),
+              React.createElement('input', { type: 'range', min: 10, max: 80, value: size, onChange: (e) => changeSize(Number(e.target.value)) })
+            )
+          ),
+          React.createElement('div', { className: 'as-legend' },
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--trace)' } }), 'unsorted'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--hot)' } }), 'comparing'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--swap)' } }), 'swapping'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--pivot)' } }), 'pivot'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--ok)' } }), 'sorted')
+          )
+        )
+      );
+    }
+
+    // Path Channel
+    function PathChannel() {
+      const [algo, setAlgo] = useState('astar');
+      const [speed, setSpeed] = useState(75);
+      const [walls, setWalls] = useState(() => new Set());
+      const [frame, setFrame] = useState(null);
+      const [status, setStatus] = useState('idle');
+      const player = usePlayer();
+      const dragRef = useRef(null);
+
+      player.delayRef.current = Math.max(6, 160 - speed * 1.5);
+      player.onFrameRef.current = (f) => { setFrame(f); if (f.done) setStatus(f.noPath ? 'no path' : 'done'); };
+      player.onDoneRef.current = () => setStatus((s) => (s === 'running' ? 'done' : s));
+
+      const startK = key(...START), endK = key(...END);
+
+      const clearRun = useCallback(() => {
+        player.load(null);
+        setFrame(null);
+        setStatus('idle');
+      }, [player]);
+
+      const toggleWall = (k, forced) => {
+        if (k === startK || k === endK) return;
+        setWalls((prev) => {
+          const next = new Set(prev);
+          const mode = forced ?? (next.has(k) ? 'remove' : 'add');
+          if (mode === 'add') next.add(k);
+          else next.delete(k);
+          return next;
+        });
+        clearRun();
+      };
+
+      const cellFromPoint = (x, y) => {
+        const el = document.elementFromPoint(x, y);
+        return el?.dataset?.cell || null;
+      };
+      const onPointerDown = (e) => {
+        const k = cellFromPoint(e.clientX, e.clientY);
+        if (!k || k === startK || k === endK) return;
+        dragRef.current = walls.has(k) ? 'remove' : 'add';
+        toggleWall(k, dragRef.current);
+      };
+      const onPointerMove = (e) => {
+        if (!dragRef.current) return;
+        const k = cellFromPoint(e.clientX, e.clientY);
+        if (!k || k === startK || k === endK) return;
+        const isWall = walls.has(k);
+        if (dragRef.current === 'add' && !isWall) toggleWall(k, 'add');
+        if (dragRef.current === 'remove' && isWall) toggleWall(k, 'remove');
+      };
+      const endDrag = () => { dragRef.current = null; };
+
+      const ensure = () => {
+        const finished = status === 'done' || status === 'no path';
+        if (!player.hasGen() && !finished) player.load(searchGridGen(algo, walls));
+        return !finished;
+      };
+      const onPlayPause = () => {
+        if (player.playing) { player.pause(); setStatus('paused'); return; }
+        if (!ensure()) return;
+        setStatus('running');
+        player.play();
+      };
+      const onStep = () => { if (!ensure()) return; setStatus('paused'); player.stepOnce(); };
+      const pickAlgo = (k) => { setAlgo(k); clearRun(); };
+
+      const cellClass = (k) => {
+        if (k === startK) return 'pc start';
+        if (k === endK) return 'pc end';
+        if (frame?.path?.has(k)) return 'pc path';
+        if (walls.has(k)) return 'pc wall';
+        if (frame?.frontier?.has(k)) return 'pc frontier';
+        if (frame?.visited?.has(k)) return 'pc visited';
+        return 'pc';
+      };
+
+      const cells = [];
+      for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++) {
+          const k = key(r, c);
+          cells.push(React.createElement('button', { key: k, 'data-cell': k, className: cellClass(k) }));
+        }
+
+      const finished = status === 'done' || status === 'no path';
+
+      return React.createElement(React.Fragment, null,
+        React.createElement('div', { className: 'as-scope' },
+          React.createElement('div', { className: 'as-screen' },
+            React.createElement('div', { className: 'pgrid', style: { gridTemplateColumns: `repeat(${COLS}, 1fr)` }, onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerLeave: endDrag }, cells)
+          ),
+          React.createElement(Readout, { items: [
+            { k: 'Status', v: status.toUpperCase(), cls: status === 'running' ? 'run' : status === 'done' ? 'done' : 'idle' },
+            { k: 'Cells Expanded', v: frame?.expanded ?? 0 },
+            { k: 'Path Length', v: frame?.path ? frame.pathLen : '—' },
+            { k: 'Time', v: PATH_ALGOS[algo].big },
+          ] })
+        ),
+        React.createElement('div', { className: 'as-deck' },
+          React.createElement('div', { className: 'as-chips' },
+            Object.entries(PATH_ALGOS).map(([k, v]) =>
+              React.createElement('button', { key: k, className: `chip ${algo === k ? 'on' : ''}`, onClick: () => pickAlgo(k) }, v.name)
+            )
+          ),
+          React.createElement('div', { className: 'as-row' },
+            React.createElement(Transport, { playing: player.playing, onPlayPause, onStep, onReset: () => { clearRun(); setWalls(new Set()); }, resetLabel: 'Clear Walls', disabled: finished }),
+            React.createElement('button', { className: 'tbtn', onClick: clearRun }, 'Clear Run')
+          ),
+          React.createElement(SpeedSlider, { value: speed, onChange: setSpeed }),
+          React.createElement('div', { className: 'as-legend' },
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--hot)' } }), 'start'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--swap)' } }), 'target'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: '#3A3F4B' } }), 'wall'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'rgba(92,207,230,.5)' } }), 'visited'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'rgba(255,180,84,.7)' } }), 'frontier'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--ok)' } }), 'path')
+          ),
+          React.createElement('div', { className: 'as-note' }, `Drag on the grid to draw walls, then run. ${PATH_ALGOS[algo].note}`)
+        )
+      );
+    }
+
+    // Search Channel
+    function makeSearchData() {
+      const set = new Set();
+      while (set.size < 21) set.add(1 + Math.floor(Math.random() * 99));
+      const values = [...set].sort((a, b) => a - b);
+      const hit = Math.random() < 0.8;
+      const target = hit
+        ? values[Math.floor(Math.random() * values.length)]
+        : (() => { let t; do { t = 1 + Math.floor(Math.random() * 99); } while (set.has(t)); return t; })();
+      return { values, target };
+    }
+
+    function SearchChannel() {
+      const [algo, setAlgo] = useState('binary');
+      const [speed, setSpeed] = useState(40);
+      const [data, setData] = useState(makeSearchData);
+      const [frame, setFrame] = useState(null);
+      const [status, setStatus] = useState('idle');
+      const player = usePlayer();
+
+      player.delayRef.current = Math.max(60, 620 - speed * 5.6);
+      player.onFrameRef.current = (f) => {
+        setFrame(f);
+        if (f.done) setStatus(f.found === -1 ? 'not found' : 'found');
+      };
+      player.onDoneRef.current = () => setStatus((s) => (s === 'running' ? 'found' : s));
+
+      const reset = useCallback(() => {
+        player.load(null);
+        setData(makeSearchData());
+        setFrame(null);
+        setStatus('idle');
+      }, [player]);
+
+      const ensure = () => {
+        const finished = status === 'found' || status === 'not found';
+        if (!player.hasGen() && !finished) {
+          const g = algo === 'binary'
+            ? binarySearchGen(data.values, data.target)
+            : linearSearchGen(data.values, data.target);
+          player.load(g);
+        }
+        return !finished;
+      };
+      const onPlayPause = () => {
+        if (player.playing) { player.pause(); setStatus('paused'); return; }
+        if (!ensure()) return;
+        setStatus('running');
+        player.play();
+      };
+      const onStep = () => { if (!ensure()) return; setStatus('paused'); player.stepOnce(); };
+      const pickAlgo = (k) => { setAlgo(k); player.load(null); setFrame(null); setStatus('idle'); };
+
+      const cellClass = (i) => {
+        if (frame?.found === i) return 'sc found';
+        if (algo === 'binary' && frame) {
+          if (frame.mid === i && frame.found === undefined) return 'sc mid';
+          if (frame.lo !== undefined && (i < frame.lo || i > frame.hi)) return 'sc cut';
+          if (i === frame.lo || i === frame.hi) return 'sc bound';
+        }
+        if (algo === 'linear' && frame) {
+          if (frame.checking === i && frame.found === undefined) return 'sc mid';
+          if (frame.checking !== undefined && i < frame.checking) return 'sc cut';
+        }
+        return 'sc';
+      };
+
+      const finished = status === 'found' || status === 'not found';
+
+      return React.createElement(React.Fragment, null,
+        React.createElement('div', { className: 'as-scope' },
+          React.createElement('div', { className: 'as-screen' },
+            React.createElement('div', { className: 'srow' },
+              React.createElement('span', null, 'TARGET → ', React.createElement('b', null, data.target)),
+              React.createElement('span', { style: { opacity: 0.6 } }, 'array is sorted ascending')
+            ),
+            React.createElement('div', { className: 'scells' },
+              data.values.map((v, i) =>
+                React.createElement('div', { key: i, className: cellClass(i) },
+                  React.createElement('span', { className: 'ix' }, i),
+                  React.createElement('span', { className: 'vl' }, v)
+                )
+              )
+            )
+          ),
+          React.createElement(Readout, { items: [
+            { k: 'Status', v: status.toUpperCase(), cls: status === 'running' ? 'run' : status === 'found' ? 'done' : 'idle' },
+            { k: 'Comparisons', v: frame?.comparisons ?? 0 },
+            { k: 'Worst Case', v: algo === 'binary' ? 'O(log n)' : 'O(n)' },
+            { k: 'n = 21 → max', v: algo === 'binary' ? '5 checks' : '21 checks' },
+          ] })
+        ),
+        React.createElement('div', { className: 'as-deck' },
+          React.createElement('div', { className: 'as-chips' },
+            React.createElement('button', { className: `chip ${algo === 'linear' ? 'on' : ''}`, onClick: () => pickAlgo('linear') }, 'Linear'),
+            React.createElement('button', { className: `chip ${algo === 'binary' ? 'on' : ''}`, onClick: () => pickAlgo('binary') }, 'Binary')
+          ),
+          React.createElement('div', { className: 'as-row' },
+            React.createElement(Transport, { playing: player.playing, onPlayPause, onStep, onReset: reset, resetLabel: 'New Data', disabled: finished }),
+            React.createElement(SpeedSlider, { value: speed, onChange: setSpeed })
+          ),
+          React.createElement('div', { className: 'as-legend' },
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--hot)' } }), 'checking'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--trace)' } }), 'lo / hi bound'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: '#3A3F4B' } }), 'eliminated'),
+            React.createElement('span', { className: 'lg' }, React.createElement('span', { className: 'sw', style: { background: 'var(--ok)' } }), 'found')
+          ),
+          React.createElement('div', { className: 'as-note' },
+            algo === 'binary'
+              ? 'Binary search halves the live region every check — watch the eliminated cells fall away in chunks.'
+              : 'Linear search walks left to right — every check eliminates exactly one cell.'
+          )
+        )
+      );
+    }
+
+    // Main app
+    const CHANNELS = [
+      { id: 'sort', ch: 'CH·01', name: 'Sort', comp: SortChannel },
+      { id: 'path', ch: 'CH·02', name: 'Pathfind', comp: PathChannel },
+      { id: 'search', ch: 'CH·03', name: 'Search', comp: SearchChannel },
+    ];
+
+    function AlgoScope() {
+      const [tab, setTab] = useState('sort');
+      const Active = CHANNELS.find((c) => c.id === tab).comp;
+
+      return React.createElement('div', { className: 'as-root' },
+        React.createElement('div', { className: 'as-shell' },
+          React.createElement('div', { className: 'as-eyebrow' }, 'Super Software Lab // Instrument 03'),
+          React.createElement('h1', { className: 'as-title' }, 'ALGO', React.createElement('span', { className: 'dot' }, '·'), 'SCOPE'),
+          React.createElement('p', { className: 'as-sub' },
+            'A bench instrument for watching algorithms think. Pick a channel, load data, and run it full speed — or single-step it like a debugger.'
+          ),
+          React.createElement('div', { className: 'as-tabs' },
+            CHANNELS.map((c) =>
+              React.createElement('button', { key: c.id, className: `as-tab ${tab === c.id ? 'active' : ''}`, onClick: () => setTab(c.id) },
+                React.createElement('span', { className: 'ch' }, c.ch),
+                React.createElement('span', { className: 'nm' }, c.name)
+              )
+            )
+          ),
+          React.createElement(Active, { key: tab })
+        )
+      );
+    }
+
+    root.render(React.createElement(AlgoScope));
+  </script>
+</body>
+</html>
