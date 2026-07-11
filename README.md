@@ -2,7 +2,9 @@
 
 A lab-instrument style algorithm visualizer for watching sorting, pathfinding, and search algorithms execute in real time.
 
-Built for [Super Software Lab](https://www.youtube.com/@supersoftwarelab) — AP Computer Science, Cybersecurity, and Networking education.
+![Sort Screenshot](Sort_Screenshot.png)
+![Pathfind Screenshot](Pathfind_Screenshot.png)
+![Search Screenshot](Search_Screenshot.png)
 
 ## What’s Inside
 
