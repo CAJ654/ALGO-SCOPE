@@ -1,8 +1,5 @@
 # ALGO·SCOPE
 
-[![Deploy to GitHub Pages](https://github.com/caj654/algo-scope/actions/workflows/deploy.yml/badge.svg)](https://github.com/caj654/algo-scope/actions/workflows/deploy.yml)
-
-
 A lab-instrument style algorithm visualizer for watching sorting, pathfinding, and search algorithms execute in real time.
 
 ![Sort Screenshot](Sort_Screenshot.png)
