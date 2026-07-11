@@ -40,6 +40,20 @@ Find a target value in a sorted array. Values miss ~20% of the time so you see b
 
 See why binary search is called “logarithmic” — 5 checks cover 21 elements.
 
+## Design
+
+Built with React (CDN-loaded for zero build step). The architecture uses 
+generator functions to yield animation frames, which keeps algorithm logic 
+separate from UI state management. This makes it easy to add new algorithms 
+without touching React.
+
+Chose a dark oscilloscope theme to match a "lab instrument" aesthetic 
+and reduce visual noise during visualization. Color choices (hot, swap, ok, 
+pivot) are designed to make state transitions obvious at a glance.
+
+Single-step mode prioritizes education — teaching narration is much easier 
+when you can pause mid-sort and explain what just happened.
+
 ## How to Use
 
 ### Online
